@@ -1,6 +1,5 @@
 {
   "name": "motor-control-app",
-  "homepage": "/motor-control-app",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
