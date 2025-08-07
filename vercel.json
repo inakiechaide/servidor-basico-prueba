@@ -5,14 +5,23 @@
       "src": "motor-control-app/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "build"
+        "distDir": "build",
+        "cleanUrls": true
       }
     }
   ],
   "routes": [
     {
+      "src": "/static/(.*)",
+      "dest": "/motor-control-app/static/$1"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/motor-control-app/favicon.ico"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/motor-control-app"
+      "dest": "/motor-control-app/index.html"
     }
   ]
 }
