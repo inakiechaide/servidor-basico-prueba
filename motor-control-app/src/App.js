@@ -79,7 +79,7 @@ function App() {
   const [status, setStatus] = useState('Desconectado');
   const [currentAngle, setCurrentAngle] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const theme = useTheme();
+  // Se eliminó la variable theme que no se estaba utilizando
   
   // Configuración para HiveMQ Cloud Serverless
   const mqttOptions = {
