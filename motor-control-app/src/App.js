@@ -8,7 +8,6 @@ import {
   CircularProgress,
   Fade,
   Zoom,
-  useTheme,
   ThemeProvider,
   createTheme,
   CssBaseline
