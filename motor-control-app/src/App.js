@@ -95,27 +95,38 @@ function App() {
   
   const mqttClient = useRef(null);
   
-  // Configuración para HiveMQ Cloud Serverless
-  const mqttOptions = {
-    host: '51e714b72522419fb79f9d2dd4091edb.s1.eu.hivemq.cloud',
-    port: 8884,
-    protocol: 'wss',
-    path: '/mqtt',
-    username: 'inakiechaide',
-    password: 'Foreverkuki1201',
-    clientId: 'web-client-' + Math.random().toString(16).substr(2, 8),
-    clean: true,
-    connectTimeout: 10 * 1000,
-    reconnectPeriod: 2000,
-    protocolVersion: 5,
-    keepalive: 60,
-    resubscribe: true,
-    properties: {
-      sessionExpiryInterval: 3600,
-      receiveMaximum: 20,
-      maximumPacketSize: 100 * 1024
+  const handleFeedback = React.useCallback((data) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const newEvent = {
+      timestamp,
+      status: data.status,
+      message: data.message,
+      device: data.device || 'esp32-servo'
+    };
+    
+    // Actualizar estado del ESP32
+    if (data.status === 'connected') {
+      setEspStatus('conectado');
+      showSnackbar('ESP32 conectado correctamente', 'success');
+    } else if (data.status === 'disconnected') {
+      setEspStatus('desconectado');
+      showSnackbar('ESP32 desconectado', 'warning');
+    } else if (data.status === 'success') {
+      // Extraer el ángulo del mensaje de éxito
+      const angleMatch = data.message.match(/Servo movido a (\d+)/);
+      if (angleMatch) {
+        setCurrentAngle(parseInt(angleMatch[1]));
+      }
     }
-  };
+    
+    // Agregar a eventos recientes (mantener solo los últimos 10)
+    setEvents(prev => [newEvent, ...prev].slice(0, 10));
+    setLastUpdate(timestamp);
+  }, [showSnackbar]);
+  
+  const showSnackbar = React.useCallback((message, severity = 'info') => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
   
   const connectToMqtt = React.useCallback(() => {
     setStatus('Conectando...');
@@ -171,7 +182,7 @@ function App() {
       setStatus(`Error: ${error.message}`);
       showSnackbar(`Error al conectar: ${error.message}`, 'error');
     }
-  }, [handleFeedback, mqttOptions, showSnackbar]);
+  }, [handleFeedback, showSnackbar]);
 
   // Inicializar conexión MQTT al cargar el componente
   useEffect(() => {
@@ -239,39 +250,6 @@ function App() {
     }
   };
 
-  const handleFeedback = (data) => {
-    const timestamp = new Date().toLocaleTimeString();
-    const newEvent = {
-      timestamp,
-      status: data.status,
-      message: data.message,
-      device: data.device || 'esp32-servo'
-    };
-    
-    // Actualizar estado del ESP32
-    if (data.status === 'connected') {
-      setEspStatus('conectado');
-      showSnackbar('ESP32 conectado correctamente', 'success');
-    } else if (data.status === 'disconnected') {
-      setEspStatus('desconectado');
-      showSnackbar('ESP32 desconectado', 'warning');
-    } else if (data.status === 'success') {
-      // Extraer el ángulo del mensaje de éxito
-      const angleMatch = data.message.match(/Servo movido a (\d+)/);
-      if (angleMatch) {
-        setCurrentAngle(parseInt(angleMatch[1]));
-      }
-    }
-    
-    // Agregar a eventos recientes (mantener solo los últimos 10)
-    setEvents(prev => [newEvent, ...prev].slice(0, 10));
-    setLastUpdate(timestamp);
-  };
-  
-  const showSnackbar = (message, severity = 'info') => {
-    setSnackbar({ open: true, message, severity });
-  };
-  
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
