@@ -117,19 +117,7 @@ function App() {
     }
   };
   
-  // Inicializar conexión MQTT al cargar el componente
-  useEffect(() => {
-    connectToMqtt();
-    
-    // Limpiar al desmontar
-    return () => {
-      if (mqttClient.current) {
-        mqttClient.current.end();
-      }
-    };
-  }, []);
-  
-  const connectToMqtt = () => {
+  const connectToMqtt = React.useCallback(() => {
     setStatus('Conectando...');
     
     try {
@@ -183,7 +171,19 @@ function App() {
       setStatus(`Error: ${error.message}`);
       showSnackbar(`Error al conectar: ${error.message}`, 'error');
     }
-  };
+  }, [handleFeedback, mqttOptions, showSnackbar]);
+
+  // Inicializar conexión MQTT al cargar el componente
+  useEffect(() => {
+    connectToMqtt();
+    
+    // Limpiar al desmontar
+    return () => {
+      if (mqttClient.current) {
+        mqttClient.current.end();
+      }
+    };
+  }, [connectToMqtt]);
 
   const sendAngle = (angle) => {
     if (!mqttClient.current || !mqttClient.current.connected) {
