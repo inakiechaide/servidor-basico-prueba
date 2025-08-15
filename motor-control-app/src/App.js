@@ -116,7 +116,11 @@ function App() {
     }
   }), []);
 
-  const handleFeedback = React.useCallback((data) => {
+  const showSnackbar = useCallback((message, severity = 'info') => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
+
+  const handleFeedback = useCallback((data) => {
     const timestamp = new Date().toLocaleTimeString();
     const newEvent = {
       timestamp,
@@ -145,9 +149,6 @@ function App() {
     setLastUpdate(timestamp);
   }, [showSnackbar]);
   
-  const showSnackbar = React.useCallback((message, severity = 'info') => {
-    setSnackbar({ open: true, message, severity });
-  }, []);
   
   const connectToMqtt = React.useCallback(() => {
     setStatus('Conectando...');
@@ -203,7 +204,7 @@ function App() {
       setStatus(`Error: ${error.message}`);
       showSnackbar(`Error al conectar: ${error.message}`, 'error');
     }
-  }, [handleFeedback, showSnackbar]);
+  }, [handleFeedback, showSnackbar, mqttOptions]);
 
   // Inicializar conexión MQTT al cargar el componente
   useEffect(() => {
