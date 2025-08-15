@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   Button, 
   Container, 
@@ -71,7 +71,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-const StatusIndicator = styled('div')(({ status, theme }) => ({
+const StatusIndicator = styled('div')(({ status }) => ({
   display: 'inline-block',
   width: '12px',
   height: '12px',
@@ -149,8 +149,7 @@ function App() {
     setLastUpdate(timestamp);
   }, [showSnackbar]);
   
-  
-  const connectToMqtt = React.useCallback(() => {
+  const connectToMqtt = useCallback(() => {
     setStatus('Conectando...');
     
     try {
@@ -218,7 +217,7 @@ function App() {
     };
   }, [connectToMqtt]);
 
-  const sendAngle = (angle) => {
+  const sendAngle = useCallback((angle) => {
     if (!mqttClient.current || !mqttClient.current.connected) {
       showSnackbar('No hay conexión con el servidor', 'error');
       return;
@@ -247,6 +246,7 @@ function App() {
         setStatus('Esperando confirmación...');
       }, 5000);
       
+      // Limpiar timeout si el componente se desmonta
       return () => clearTimeout(timeout);
       
     } catch (error) {
@@ -255,14 +255,14 @@ function App() {
       showSnackbar(`Error: ${error.message}`, 'error');
       setIsLoading(false);
     }
-  };
+  }, [showSnackbar]);
 
-  const getButtonVariant = (angle) => {
+  const getButtonVariant = useCallback((angle) => {
     if (currentAngle === angle) return 'contained';
     return 'outlined';
-  };
+  }, [currentAngle]);
 
-  const getButtonColor = (angle) => {
+  const getButtonColor = useCallback((angle) => {
     switch(angle) {
       case 0: return 'error';
       case 30: return 'warning';
@@ -270,13 +270,13 @@ function App() {
       case 180: return 'success';
       default: return 'primary';
     }
-  };
+  }, []);
 
-  const handleCloseSnackbar = () => {
+  const handleCloseSnackbar = useCallback(() => {
     setSnackbar(prev => ({ ...prev, open: false }));
-  };
+  }, []);
 
-  const getButtonIcon = (angle) => {
+  const getButtonIcon = useCallback((angle) => {
     switch(angle) {
       case 0: return <PowerSettingsNewIcon sx={{ mr: 1 }} />;
       case 30: return <NightsStayIcon sx={{ mr: 1 }} />;
@@ -284,9 +284,9 @@ function App() {
       case 180: return <WbSunnyIcon sx={{ mr: 1 }} />;
       default: return null;
     }
-  };
+  }, []);
 
-  const renderStatusChip = (status) => {
+  const renderStatusChip = useCallback((status) => {
     const statusMap = {
       'conectado': { label: 'Conectado', color: 'success' },
       'desconectado': { label: 'Desconectado', color: 'error' },
@@ -303,7 +303,7 @@ function App() {
         sx={{ ml: 1, fontWeight: 'medium' }}
       />
     );
-  };
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>
@@ -334,10 +334,6 @@ function App() {
                 Panel de control remoto
               </Typography>
             </Box>
-            
-
-            
-
 
             <Box 
               display="flex" 
@@ -383,7 +379,7 @@ function App() {
                         </Box>
                       </Box>
                       <Box flexGrow={1} />
-                      {isLoading && currentAngle === angle ? (
+                      {isLoading ? (
                         <CircularProgress size={20} color="inherit" />
                       ) : null}
                     </StyledButton>
@@ -452,48 +448,41 @@ function App() {
               )}
             </Paper>
 
-            <Box mt={4} mb={4}>
-              <Zoom in={true} style={{ transitionDelay: '200ms' }}>
-                <Paper 
-                  elevation={4} 
-                  sx={{ 
-                    p: 3, 
-                    borderRadius: 3,
-                    background: 'linear-gradient(145deg, #ffffff 0%, #f5f7fa 100%)',
-                    border: '1px solid rgba(0, 0, 0, 0.05)'
-                  }}
-                >
-                  <Box display="flex" flexDirection="column" alignItems="center">
-                    <Box 
-                      display="grid" 
-                      gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)' }} 
-                      gap={2}
-                      width="100%"
-                      mb={3}
-                    >
-                      {currentAngle !== null && (
-                        <Box 
-                          textAlign="center" 
-                          py={2}
-                          sx={{
-                            backgroundColor: 'rgba(25, 118, 210, 0.08)',
-                            borderRadius: 2,
-                            mb: 2
-                          }}
-                        >
-                          <Typography variant="h3" component="div" color="primary">
-                            {currentAngle}°
-                          </Typography>
-                          <Typography variant="caption" color="textSecondary">
-                            Ángulo actual
-                          </Typography>
-                        </Box>
-                      )}
+            {currentAngle !== null && (
+              <Box mt={4} mb={4}>
+                <Zoom in={true} style={{ transitionDelay: '200ms' }}>
+                  <Paper 
+                    elevation={4} 
+                    sx={{ 
+                      p: 3, 
+                      borderRadius: 3,
+                      background: 'linear-gradient(145deg, #ffffff 0%, #f5f7fa 100%)',
+                      border: '1px solid rgba(0, 0, 0, 0.05)'
+                    }}
+                  >
+                    <Box display="flex" flexDirection="column" alignItems="center">
+                      <Box 
+                        textAlign="center" 
+                        py={2}
+                        sx={{
+                          backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                          borderRadius: 2,
+                          mb: 2,
+                          width: '100%'
+                        }}
+                      >
+                        <Typography variant="h3" component="div" color="primary">
+                          {currentAngle}°
+                        </Typography>
+                        <Typography variant="caption" color="textSecondary">
+                          Ángulo actual
+                        </Typography>
+                      </Box>
                     </Box>
-                  </Box>
-                </Paper>
-              </Zoom>
-            </Box>
+                  </Paper>
+                </Zoom>
+              </Box>
+            )}
             
             <Box mt={4} textAlign="center">
               <Typography variant="caption" color="textSecondary">
