@@ -95,6 +95,27 @@ function App() {
   
   const mqttClient = useRef(null);
   
+  const mqttOptions = useMemo(() => ({
+    host: '51e714b72522419fb79f9d2dd4091edb.s1.eu.hivemq.cloud',
+    port: 8884,
+    protocol: 'wss',
+    path: '/mqtt',
+    username: 'inakiechaide',
+    password: 'Foreverkuki1201',
+    clientId: 'web-client-' + Math.random().toString(16).substr(2, 8),
+    clean: true,
+    connectTimeout: 10 * 1000,
+    reconnectPeriod: 2000,
+    protocolVersion: 5,
+    keepalive: 60,
+    resubscribe: true,
+    properties: {
+      sessionExpiryInterval: 3600,
+      receiveMaximum: 20,
+      maximumPacketSize: 100 * 1024
+    }
+  }), []);
+
   const handleFeedback = React.useCallback((data) => {
     const timestamp = new Date().toLocaleTimeString();
     const newEvent = {
